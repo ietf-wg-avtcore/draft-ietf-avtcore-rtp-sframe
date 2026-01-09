@@ -213,14 +213,27 @@ This document is subject to the security considerations of SFrame.
 
 # IANA Considerations
 
-This document defines a new attribute name to be listed in the "attribute-name" registry of the "SDP Parameters" registry group, according to the following data:
+This document updates the "attribute-name (formerly "att-field")" subregistry of the "Session Description Protocol (SDP) Parameters" registry (see Section 8.2.4 of {{!RFC8866}}).
+Specifically, it adds the SDP "a=sframe" attribute for use at the media level.
 
-Type: attribute
+Contact name: IETF AVT Working Group
 
-SDP Name: sframe
+Contact email address: avt@ietf.org
+
+Attribute name: sframe
+
+Attribute syntax: This attribute takes no values
+
+Attribute semantics: N/A
+
+Attribute value: N/A
 
 Usage Level: media
 
-Mux Category: NORMAL
+Charset dependent: No
 
-Reference: RFC XXXX
+Purpose: The presence of this attribute in the SDP indicates that the endpoint is capable of processing SFrame packets
+
+O/A procedures: SDP O/A procedures are defined in section 6
+
+Mux Category: NORMAL
