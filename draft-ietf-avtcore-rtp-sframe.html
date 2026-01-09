@@ -7,8 +7,9 @@
 <title>RTP Payload Format for SFrame</title>
 <meta content="Peter Thatcher" name="author">
 <meta content="Youenn Fablet" name="author">
+<meta content="Aron Rosenberg" name="author">
 <meta content="
-       This document describes the RTP payload format of SFrame. 
+       This document describes the RTP payload format of SFrame, its use in SDP, and per stream key derivation. 
     " name="description">
 <meta content="xml2rfc 3.29.0" name="generator">
 <meta content="Internet-Draft" name="keyword">
@@ -20,7 +21,7 @@
     google-i18n-address 3.1.1
     intervaltree 3.1.0
     Jinja2 3.1.6
-    lxml 6.0.0
+    lxml 5.4.0
     platformdirs 4.3.8
     pycountry 24.6.1
     PyYAML 6.0.2
@@ -1045,11 +1046,11 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">RTP Payload Format for SFrame</td>
-<td class="right">November 2025</td>
+<td class="right">January 2026</td>
 </tr></thead>
 <tfoot><tr>
-<td class="left">Thatcher &amp; Fablet</td>
-<td class="center">Expires 10 May 2026</td>
+<td class="left">Thatcher, et al.</td>
+<td class="center">Expires 13 July 2026</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1063,12 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-avtcore-rtp-sframe-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2025-11-06" class="published">6 November 2025</time>
+<time datetime="2026-01-09" class="published">9 January 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2026-05-10">10 May 2026</time></dd>
+<dd class="expires"><time datetime="2026-07-13">13 July 2026</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1078,13 +1079,17 @@ svg :is([fill="white"], [fill^="#fff"]) {
       <div class="author-name">Y. Fablet</div>
 <div class="org">Apple</div>
 </div>
+<div class="author">
+      <div class="author-name">A. Rosenberg</div>
+<div class="org">Apple</div>
+</div>
 </dd>
 </dl>
 </div>
 <h1 id="title">RTP Payload Format for SFrame</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">This document describes the RTP payload format of SFrame.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">This document describes the RTP payload format of SFrame, its use in SDP, and per stream key derivation.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1121,7 +1126,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 10 May 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 13 July 2026.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1130,7 +1135,7 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
         </h2>
 <p id="section-boilerplate.2-1">
-            Copyright (c) 2025 IETF Trust and the persons identified as the
+            Copyright (c) 2026 IETF Trust and the persons identified as the
             document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.2-2">
             This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1163,25 +1168,44 @@ svg :is([fill="white"], [fill^="#fff"]) {
             <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-rtp-header-usage" class="internal xref">RTP Header Usage</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-rtp-packetization-of-sframe" class="internal xref">RTP Packetization of SFrame</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-rtp-processing-of-sframe-fr" class="internal xref">RTP Processing of SFrame frames</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-rtp-packetization-of-sframe" class="internal xref">RTP Packetization of SFrame</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.1">
+                    <p id="section-toc.1-1.5.2.1.2.1.1"><a href="#section-5.1.1" class="auto internal xref">5.1.1</a>.  <a href="#name-per-frame-sframe-sending" class="internal xref">Per-frame SFrame sending</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1.2.2">
+                    <p id="section-toc.1-1.5.2.1.2.2.1"><a href="#section-5.1.2" class="auto internal xref">5.1.2</a>.  <a href="#name-per-packet-sframe-sending" class="internal xref">Per-packet SFrame sending</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-rtp-depacketization-of-sfra" class="internal xref">RTP depacketization of SFrame</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-rtp-depacketization-of-sfra" class="internal xref">RTP depacketization of SFrame</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-sframe-sdp-negotiation" class="internal xref">SFrame SDP negotiation</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-sframe-sdp-negotiation" class="internal xref">SFrame SDP negotiation</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-sframe-sdp-rtp-key-manageme" class="internal xref">SFrame SDP RTP Key Management</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-sframe-ratcheting-with-per-" class="internal xref">SFrame Ratcheting with per SSRC keys</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
-            <p id="section-toc.1-1.11.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1195,7 +1219,8 @@ svg :is([fill="white"], [fill^="#fff"]) {
 <p id="section-1-1">SFrame <span>[<a href="#RFC9605" class="cite xref">RFC9605</a>]</span> describes an end-to-end encryption and authentication mechanism
 for media data in a multiparty conference call, in which central media servers (SFUs) can access the
 media metadata needed to make forwarding decisions without having access to the actual media.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<p id="section-1-2">This document describes how to packetize a media frame encrypted using SFrame into RTP packets.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-2">This document describes how to packetize a media frame encrypted using SFrame into RTP packets, how to
+signal support in SDP, and how to derive per SSRC SFrame keys from a common key.<a href="#section-1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="terminology-and-notation">
@@ -1249,7 +1274,7 @@ This alternative is also compatible with <span>[<a href="#WebRTC_Encoded_Transfo
   |            contributing source (CSRC) identifiers             |
   |                             ....                              |
   +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+
-  |S E x x x x x x|                                               |
+  |S E T x x x x x|                                               |
   |                                                               |
   :                       SFrame payload                          :
   |                                                               |
@@ -1261,150 +1286,262 @@ This alternative is also compatible with <span>[<a href="#WebRTC_Encoded_Transfo
 <p id="section-4-3">The first byte of the RTP payload is the SFrame payload descriptor.<a href="#section-4-3" class="pilcrow">¶</a></p>
 <p id="section-4-4">The S bit of the SFrame payload descriptor MUST be 0 for all fragments except for the first one of the SFrame frame.<a href="#section-4-4" class="pilcrow">¶</a></p>
 <p id="section-4-5">The E bit of the SFrame payload descriptor MUST be 0 for all fragments except for the last one of the SFrame frame.<a href="#section-4-5" class="pilcrow">¶</a></p>
-<p id="section-4-6">The 6 remaining bits of the SFrame payload descriptor are reserved for future use.<a href="#section-4-6" class="pilcrow">¶</a></p>
-<p id="section-4-7">The payload type (PT) identifies the format of the media encrypted with SFrame.<a href="#section-4-7" class="pilcrow">¶</a></p>
-<p id="section-4-8">The SSRC, timestamp, marker bit, and CSRCs of the SFrame RTP packets MUST be the same
+<p id="section-4-6">A SFrame frame is protecting media content that can be either in a packetized format or in a raw format as defined by <span>[<a href="#WebRTC_Encoded_Transform" class="cite xref">WebRTC_Encoded_Transform</a>]</span>.
+The T bit of the SFrame payload descriptor MUST be 0 if the fragment comes from a raw format as defined by <span>[<a href="#WebRTC_Encoded_Transform" class="cite xref">WebRTC_Encoded_Transform</a>]</span>.
+The T bit of the SFrame payload descriptor MUST be 1 if the fragment comes from a packetized format.
+All fragments of a SFrame frame MUST have the same T bit value.<a href="#section-4-6" class="pilcrow">¶</a></p>
+<p id="section-4-7">The 5 remaining bits of the SFrame payload descriptor are reserved for future use.<a href="#section-4-7" class="pilcrow">¶</a></p>
+<p id="section-4-8">The payload type (PT) identifies the format of the media encrypted with SFrame.<a href="#section-4-8" class="pilcrow">¶</a></p>
+<p id="section-4-9">The SSRC, timestamp, marker bit, and CSRCs of the SFrame RTP packets MUST be the same
 as those of the output of the media-format-specific packetization.
 The header extensions of the SFrame RTP packets SHOULD be the same
 as those of the output of the media-format-specific packetization, but some may be omitted
-if it is known that the omitted header extensions do not need to be duplicated on each SFrame RTP packet.<a href="#section-4-8" class="pilcrow">¶</a></p>
+if it is known that the omitted header extensions do not need to be duplicated on each SFrame RTP packet.<a href="#section-4-9" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="rtp-packetization-of-sframe">
+<div id="rtp-processing-of-sframe-frames">
 <section id="section-5">
-      <h2 id="name-rtp-packetization-of-sframe">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-rtp-packetization-of-sframe" class="section-name selfRef">RTP Packetization of SFrame</a>
+      <h2 id="name-rtp-processing-of-sframe-fr">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-rtp-processing-of-sframe-fr" class="section-name selfRef">RTP Processing of SFrame frames</a>
       </h2>
-<p id="section-5-1">SFrame packets can be generated either from RTP media packets or from media frames as defined by <span>[<a href="#WebRTC_Encoded_Transform" class="cite xref">WebRTC_Encoded_Transform</a>]</span>.<a href="#section-5-1" class="pilcrow">¶</a></p>
-<p id="section-5-2">For per-packet SFrame, the following processing is done, with a media frame as input:<a href="#section-5-2" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-5-3">
-<li id="section-5-3.1">
-          <p id="section-5-3.1.1">Generate a group of RTP media packets from the media frame using a media-format-specific packetizer.
-The media-format-specific packetizer needs to be made aware of the SFrame overhead that happens to each RTP packet.<a href="#section-5-3.1.1" class="pilcrow">¶</a></p>
+<div id="rtp-packetization-of-sframe">
+<section id="section-5.1">
+        <h3 id="name-rtp-packetization-of-sframe">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-rtp-packetization-of-sframe" class="section-name selfRef">RTP Packetization of SFrame</a>
+        </h3>
+<p id="section-5.1-1">For a given SFrame frame to be sent, the following steps are done:<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.1-2">
+<li id="section-5.1-2.1">
+            <p id="section-5.1-2.1.1">Let content be the SFrame frame payload to be sent.<a href="#section-5.1-2.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-3.2">
-          <p id="section-5-3.2.1">For each RTP packet of the group, encrypt its payload with SFrame.<a href="#section-5-3.2.1" class="pilcrow">¶</a></p>
+          <li id="section-5.1-2.2">
+            <p id="section-5.1-2.2.1">Let metadata be the SFrame frame metadata. It contains information such as payload type, timestamp, synchronization source, contributing sources, marker bit, header extensions, and payload origin.<a href="#section-5.1-2.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-3.3">
-          <p id="section-5-3.3.1">Prepend to each RTP packet payload a SFrame payload descriptor with the S and E bits set to 1.<a href="#section-5-3.3.1" class="pilcrow">¶</a></p>
+          <li id="section-5.1-2.3">
+            <p id="section-5.1-2.3.1">Fragment the content in a list of payloads so that RTP packets generated from them do not exceed the network maximum transmission unit size.<a href="#section-5.1-2.3.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-3.4">
-          <p id="section-5-3.4.1">Send each RTP packet of the group.<a href="#section-5-3.4.1" class="pilcrow">¶</a></p>
+          <li id="section-5.1-2.4">
+            <p id="section-5.1-2.4.1">For each payload in the list, run the following steps:<a href="#section-5.1-2.4.1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.1-2.4.2">
+<li id="section-5.1-2.4.2.1">
+                <p id="section-5.1-2.4.2.1.1">Let descriptor be a SFrame payload descriptor, initialized to a zero byte.<a href="#section-5.1-2.4.2.1.1" class="pilcrow">¶</a></p>
 </li>
-      </ol>
-<p id="section-5-4">For per-frame SFrame, the following processing is done, with a media frame as input:<a href="#section-5-4" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-5-5">
-<li id="section-5-5.1">
-          <p id="section-5-5.1.1">Generate a SFrame ciphertext from the media frame data.<a href="#section-5-5.1.1" class="pilcrow">¶</a></p>
+              <li id="section-5.1-2.4.2.2">
+                <p id="section-5.1-2.4.2.2.1">Set the first bit S of the descriptor to 1 if the payload is first in the list and 0 otherwise.<a href="#section-5.1-2.4.2.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-5.2">
-          <p id="section-5-5.2.1">Fragment the SFrame ciphertext in a group of payloads so that RTP packets generated from them do not exceed the network maximum transmission unit size.<a href="#section-5-5.2.1" class="pilcrow">¶</a></p>
+              <li id="section-5.1-2.4.2.3">
+                <p id="section-5.1-2.4.2.3.1">Set the second bit E of the descriptor to 1 if the payload is last in the list and 0 otherwise.<a href="#section-5.1-2.4.2.3.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-5.3">
-          <p id="section-5-5.3.1">Prepend a zero byte as the SFrame payload descriptor to all payloads of the group.<a href="#section-5-5.3.1" class="pilcrow">¶</a></p>
+              <li id="section-5.1-2.4.2.4">
+                <p id="section-5.1-2.4.2.4.1">Set the third bit T of the descriptor to 1 if the SFrame frame payload origin is packetized, and 0 if it is raw.<a href="#section-5.1-2.4.2.4.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-5.4">
-          <p id="section-5-5.4.1">Set the first bit S of the SFrame payload descriptor of the first packet to 1.<a href="#section-5-5.4.1" class="pilcrow">¶</a></p>
+              <li id="section-5.1-2.4.2.5">
+                <p id="section-5.1-2.4.2.5.1">Prepend the payload with the descriptor.<a href="#section-5.1-2.4.2.5.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-5.5">
-          <p id="section-5-5.5.1">Set the second bit E of the SFrame payload descriptor of the last packet to 1.<a href="#section-5-5.5.1" class="pilcrow">¶</a></p>
+              <li id="section-5.1-2.4.2.6">
+                <p id="section-5.1-2.4.2.6.1">Let packet be a RTP packet with payload.<a href="#section-5.1-2.4.2.6.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-5.6">
-          <p id="section-5-5.6.1">Generate a group of RTP packets from the group of payloads, using the media frame to generate the RTP header, including RTP header extensions.<a href="#section-5-5.6.1" class="pilcrow">¶</a></p>
+              <li id="section-5.1-2.4.2.7">
+                <p id="section-5.1-2.4.2.7.1">Set the packet's RTP header, including header extensions, using the metadata.<a href="#section-5.1-2.4.2.7.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-5-5.7">
-          <p id="section-5-5.7.1">Send each RTP packet of the RTP packet group.<a href="#section-5-5.7.1" class="pilcrow">¶</a></p>
+              <li id="section-5.1-2.4.2.8">
+                <p id="section-5.1-2.4.2.8.1">In particular, if the SFrame frame marker bit is set, set the RTP header marker bit to the value of the second bit E of the descriptor.<a href="#section-5.1-2.4.2.8.1" class="pilcrow">¶</a></p>
 </li>
-      </ol>
+              <li id="section-5.1-2.4.2.9">
+                <p id="section-5.1-2.4.2.9.1">Send the packet.<a href="#section-5.1-2.4.2.9.1" class="pilcrow">¶</a></p>
+</li>
+            </ol>
+</li>
+        </ol>
+<p id="section-5.1-3">SFrame packets can be generated either from RTP media packets or from media frames as defined by <span>[<a href="#WebRTC_Encoded_Transform" class="cite xref">WebRTC_Encoded_Transform</a>]</span>.
+The two kind of processing are presented below.<a href="#section-5.1-3" class="pilcrow">¶</a></p>
+<div id="per-frame-sframe-sending">
+<section id="section-5.1.1">
+          <h4 id="name-per-frame-sframe-sending">
+<a href="#section-5.1.1" class="section-number selfRef">5.1.1. </a><a href="#name-per-frame-sframe-sending" class="section-name selfRef">Per-frame SFrame sending</a>
+          </h4>
+<p id="section-5.1.1-1">For per-frame SFrame, the following steps are done on sender side, with a media frame as input:<a href="#section-5.1.1-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.1.1-2">
+<li id="section-5.1.1-2.1">
+              <p id="section-5.1.1-2.1.1">Generate a list of RTP packets from the media frame using the media-format-specific packetizer.<a href="#section-5.1.1-2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.1.1-2.2">
+              <p id="section-5.1.1-2.2.1">Let packet be the last RTP packet in the list.<a href="#section-5.1.1-2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.1.1-2.3">
+              <p id="section-5.1.1-2.3.1">Let payload be a SFrame ciphertext generated from the media frame data.<a href="#section-5.1.1-2.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.1.1-2.4">
+              <p id="section-5.1.1-2.4.1">Let metadata be a SFrame frame metadata.<a href="#section-5.1.1-2.4.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.1.1-2.5">
+              <p id="section-5.1.1-2.5.1">Set the SFrame metadata payload origin to raw.<a href="#section-5.1.1-2.5.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.1.1-2.6">
+              <p id="section-5.1.1-2.6.1">Set the SFrame metadata marker bit if the packet has its marker bit set.<a href="#section-5.1.1-2.6.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.1.1-2.7">
+              <p id="section-5.1.1-2.7.1">Set the SFrame metadata other fields (timestamp, payload type, RTP header extensions...) using the packet RTP header.<a href="#section-5.1.1-2.7.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.1.1-2.8">
+              <p id="section-5.1.1-2.8.1">Send the SFrame frame generated from payload and metadata to the SFrame packetizer.<a href="#section-5.1.1-2.8.1" class="pilcrow">¶</a></p>
+</li>
+          </ol>
+</section>
+</div>
+<div id="per-packet-sframe-sending">
+<section id="section-5.1.2">
+          <h4 id="name-per-packet-sframe-sending">
+<a href="#section-5.1.2" class="section-number selfRef">5.1.2. </a><a href="#name-per-packet-sframe-sending" class="section-name selfRef">Per-packet SFrame sending</a>
+          </h4>
+<p id="section-5.1.2-1">For per-packet SFrame, the following steps are done on sender side, with a media frame as input:<a href="#section-5.1.2-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.1.2-2">
+<li id="section-5.1.2-2.1">
+              <p id="section-5.1.2-2.1.1">Generate a list of RTP packets from the media frame using the media-format-specific packetizer.
+The packetizer can be made aware of the SFrame overhead so that packet payloads do not get further split when doing SFrame packetization,
+to get a 1-1 match between the generated RTP packets and the SFrame encrypted sent RTP packets.<a href="#section-5.1.2-2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li id="section-5.1.2-2.2">
+              <p id="section-5.1.2-2.2.1">For each RTP packet in the list, run the following steps:<a href="#section-5.1.2-2.2.1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.1.2-2.2.2">
+<li id="section-5.1.2-2.2.2.1">
+                  <p id="section-5.1.2-2.2.2.1.1">Let payload be a SFrame ciphertext generated from the RTP packet payload.<a href="#section-5.1.2-2.2.2.1.1" class="pilcrow">¶</a></p>
+</li>
+                <li id="section-5.1.2-2.2.2.2">
+                  <p id="section-5.1.2-2.2.2.2.1">Let metadata be a SFrame frame metadata.<a href="#section-5.1.2-2.2.2.2.1" class="pilcrow">¶</a></p>
+</li>
+                <li id="section-5.1.2-2.2.2.3">
+                  <p id="section-5.1.2-2.2.2.3.1">Set the SFrame metadata content origin to packetized.<a href="#section-5.1.2-2.2.2.3.1" class="pilcrow">¶</a></p>
+</li>
+                <li id="section-5.1.2-2.2.2.4">
+                  <p id="section-5.1.2-2.2.2.4.1">Set the SFrame metadata other fields using the packet RTP header, including the marker bit.<a href="#section-5.1.2-2.2.2.4.1" class="pilcrow">¶</a></p>
+</li>
+                <li id="section-5.1.2-2.2.2.5">
+                  <p id="section-5.1.2-2.2.2.5.1">Send the SFrame frame generated from payload and metadata to the SFrame packetizer.<a href="#section-5.1.2-2.2.2.5.1" class="pilcrow">¶</a></p>
+</li>
+              </ol>
+</li>
+          </ol>
+</section>
+</div>
 </section>
 </div>
 <div id="rtp-depacketization-of-sframe">
-<section id="section-6">
-      <h2 id="name-rtp-depacketization-of-sfra">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-rtp-depacketization-of-sfra" class="section-name selfRef">RTP depacketization of SFrame</a>
-      </h2>
-<p id="section-6-1">Reception of SFrame packets is done as follows:<a href="#section-6-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-6-2">
-<li id="section-6-2.1">
-          <p id="section-6-2.1.1">The fragments of a given SFrame ciphertext are grouped together in order of the RTP sequence number,
-the first packet of the group having its S bit set to 1 and the last packet of the group having its E bit set to 1.
-All packets between the first and last need to be in the group.<a href="#section-6-2.1.1" class="pilcrow">¶</a></p>
+<section id="section-5.2">
+        <h3 id="name-rtp-depacketization-of-sfra">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-rtp-depacketization-of-sfra" class="section-name selfRef">RTP depacketization of SFrame</a>
+        </h3>
+<p id="section-5.2-1">When receiving a RTP SFrame packet, the following steps are done:<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.2-2">
+<li id="section-5.2-2.1">
+            <p id="section-5.2-2.1.1">Add the packet to the set of received RTP packets.<a href="#section-5.2-2.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-6-2.2">
-          <p id="section-6-2.2.1">Concatenate the payloads of all packets of the group to form the SFrame ciphertext.<a href="#section-6-2.2.1" class="pilcrow">¶</a></p>
+          <li id="section-5.2-2.2">
+            <p id="section-5.2-2.2.1">Sort the set in order of the RTP sequence number.<a href="#section-5.2-2.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-6-2.3">
-          <p id="section-6-2.3.1">Decrypt the SFrame ciphertext to obtain the media decrypted data.<a href="#section-6-2.3.1" class="pilcrow">¶</a></p>
+          <li id="section-5.2-2.3">
+            <p id="section-5.2-2.3.1">Search for the smallest list of RTP packets in the set such that:<a href="#section-5.2-2.3.1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.2-2.3.2">
+<li id="section-5.2-2.3.2.1">
+                <p id="section-5.2-2.3.2.1.1">The packets are consecutive in sequence number.<a href="#section-5.2-2.3.2.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-6-2.4">
-          <p id="section-6-2.4.1">If per-packet SFrame is being used, the following processing is done:<a href="#section-6-2.4.1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-6-2.4.2">
-<li id="section-6-2.4.2.1">
-              <p id="section-6-2.4.2.1.1">Assert that the group of packets consists of a single packet.<a href="#section-6-2.4.2.1.1" class="pilcrow">¶</a></p>
+              <li id="section-5.2-2.3.2.2">
+                <p id="section-5.2-2.3.2.2.1">The first packet of the list has its S bit set to 1.<a href="#section-5.2-2.3.2.2.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-6-2.4.2.2">
-              <p id="section-6-2.4.2.2.1">Set the media decrypted data as the payload of the packet and send the packet to the media-format-specific RTP depacketizer.<a href="#section-6-2.4.2.2.1" class="pilcrow">¶</a></p>
+              <li id="section-5.2-2.3.2.3">
+                <p id="section-5.2-2.3.2.3.1">The last packet of the list has its E bit set to 1.<a href="#section-5.2-2.3.2.3.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-6-2.4.2.3">
-              <p id="section-6-2.4.2.3.1">If the depacketizer cannot generate a media frame yet, abort these steps. Otherwise, generate a media frame from the depacketizer.<a href="#section-6-2.4.2.3.1" class="pilcrow">¶</a></p>
+            </ol>
 </li>
-          </ol>
+          <li id="section-5.2-2.4">
+            <p id="section-5.2-2.4.1">If there is no such list, abort these steps.<a href="#section-5.2-2.4.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-6-2.5">
-          <p id="section-6-2.5.1">If per-frame SFrame is being used, the following processing is done:<a href="#section-6-2.5.1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-6-2.5.2">
-<li id="section-6-2.5.2.1">
-              <p id="section-6-2.5.2.1.1">Assert that the group of packets all have the same payload type.<a href="#section-6-2.5.2.1.1" class="pilcrow">¶</a></p>
+          <li id="section-5.2-2.5">
+            <p id="section-5.2-2.5.1">Remove the selected RTP packets from the set of received RTP packets.<a href="#section-5.2-2.5.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-6-2.5.2.2">
-              <p id="section-6-2.5.2.2.1">Extract the media metadata from the group of packets.<a href="#section-6-2.5.2.2.1" class="pilcrow">¶</a></p>
+          <li id="section-5.2-2.6">
+            <p id="section-5.2-2.6.1">If the T bits of each RTP packet of the list do not have the same value, abort these steps.<a href="#section-5.2-2.6.1" class="pilcrow">¶</a></p>
 </li>
-            <li id="section-6-2.5.2.3">
-              <p id="section-6-2.5.2.3.1">Generate a media frame from the media decrypted data and the media metadata.<a href="#section-6-2.5.2.3.1" class="pilcrow">¶</a></p>
+          <li id="section-5.2-2.7">
+            <p id="section-5.2-2.7.1">If the payload types of each RTP packet of the list do not have the same value, abort these steps.<a href="#section-5.2-2.7.1" class="pilcrow">¶</a></p>
 </li>
-          </ol>
+          <li id="section-5.2-2.8">
+            <p id="section-5.2-2.8.1">For each RTP packet of the list, remove the first byte of the packet's payload.<a href="#section-5.2-2.8.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-6-2.6">
-          <p id="section-6-2.6.1">Send the media frame to the receiving pipeline.<a href="#section-6-2.6.1" class="pilcrow">¶</a></p>
+          <li id="section-5.2-2.9">
+            <p id="section-5.2-2.9.1">Let the SFrame payload be the concatenation of the payloads of each RTP packet of the list.<a href="#section-5.2-2.9.1" class="pilcrow">¶</a></p>
 </li>
-      </ol>
+          <li id="section-5.2-2.10">
+            <p id="section-5.2-2.10.1">Let the SFrame metadata be computed from the RTP headers of the RTP packets of the list, in particular:<a href="#section-5.2-2.10.1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.2-2.10.2">
+<li id="section-5.2-2.10.2.1">
+                <p id="section-5.2-2.10.2.1.1">The metadata's marker bit is set if the marker bit of the last RTP packet of the list is set.<a href="#section-5.2-2.10.2.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-5.2-2.10.2.2">
+                <p id="section-5.2-2.10.2.2.1">The metadata's payload origin is packetized if the T bit value is 1 and raw otherwise.<a href="#section-5.2-2.10.2.2.1" class="pilcrow">¶</a></p>
+</li>
+            </ol>
+</li>
+          <li id="section-5.2-2.11">
+            <p id="section-5.2-2.11.1">Decrypt the SFrame payload to obtain the media decrypted data.<a href="#section-5.2-2.11.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-5.2-2.12">
+            <p id="section-5.2-2.12.1">If the frame metadata content origin is raw, aka the T bits of each RTP packet of the list are 0, send the media frame created from the media decrypted data and SFrame metadata to the receiving pipeline.<a href="#section-5.2-2.12.1" class="pilcrow">¶</a></p>
+</li>
+          <li id="section-5.2-2.13">
+            <p id="section-5.2-2.13.1">Otherwise, run the following sub-steps:<a href="#section-5.2-2.13.1" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-5.2-2.13.2">
+<li id="section-5.2-2.13.2.1">
+                <p id="section-5.2-2.13.2.1.1">Let packetizer be a media-format-specific packetizer selected from the frame payload type.<a href="#section-5.2-2.13.2.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-5.2-2.13.2.2">
+                <p id="section-5.2-2.13.2.2.1">Send the media decrypted data and SFrame metadata to the packetizer.<a href="#section-5.2-2.13.2.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li id="section-5.2-2.13.2.3">
+                <p id="section-5.2-2.13.2.3.1">If the packetizer generates a media frame, send the media frame to the receiving pipeline.<a href="#section-5.2-2.13.2.3.1" class="pilcrow">¶</a></p>
+</li>
+            </ol>
+</li>
+        </ol>
+</section>
+</div>
 </section>
 </div>
 <div id="sframe-sdp-negotiation">
-<section id="section-7">
+<section id="section-6">
       <h2 id="name-sframe-sdp-negotiation">
-<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-sframe-sdp-negotiation" class="section-name selfRef">SFrame SDP negotiation</a>
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-sframe-sdp-negotiation" class="section-name selfRef">SFrame SDP negotiation</a>
       </h2>
-<p id="section-7-1">SFrame packetization is indicated via a new "a=sframe" SDP attribute defined in this specification.
-This attribute is used at media level, it does not appear at session level.<a href="#section-7-1" class="pilcrow">¶</a></p>
-<p id="section-7-2">The presence of the "a=sframe" attribute in a media section (in either an offer or an answer) indicates that the
-endpoint is expecting to receive RTP packets encrypted with SFrame for that media section, as defined below.<a href="#section-7-2" class="pilcrow">¶</a></p>
-<p id="section-7-3">Once each peer has verified that the other party expects to receive SFrame RTP packets, senders are expected to send SFrame encrypted RTP packets.
+<p id="section-6-1">SFrame packetization is indicated via a new "a=sframe" SDP attribute defined in this specification.
+This attribute is used at media level, it does not appear at session level.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2">The presence of the "a=sframe" attribute in a media section (in either an offer or an answer) indicates that the
+endpoint is expecting to receive RTP packets encrypted with SFrame for that media section, as defined below.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">Once each peer has verified that the other party expects to receive SFrame RTP packets, senders are expected to send SFrame encrypted RTP packets.
 If one peer expects to use SFrame for a media section and identifies that the other peer does not support it, the peer
-is expected to stop the transceiver associated with the media section, which will generate a zero port for that m-section.<a href="#section-7-3" class="pilcrow">¶</a></p>
-<p id="section-7-4">When SFrame is in use for that media section, it will apply to the relevant media encodings defined for that media section.
+is expected to stop the transceiver associated with the media section, which will generate a zero port for that m-section.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">When SFrame is in use for that media section, it will apply to the relevant media encodings defined for that media section.
 This includes RTP payload types bound to media packetizers and media depacketizers as defined in <span>[<a href="#RFC7656" class="cite xref">RFC7656</a>]</span>, typically audio formats such as Opus and RTP video formats such as H264.
-This notably includes RTP payload types representing <span>[<a href="#WebRTC_Encoded_Transform" class="cite xref">WebRTC_Encoded_Transform</a>]</span> <a href="https://w3c.github.io/webrtc-encoded-transform/#dom-rtcencodedvideoframe-data">encoded video frame formats</a> and <a href="https://w3c.github.io/webrtc-encoded-transform/#dom-rtcencodedaudioframe-data">encoded audio frame formats</a>.<a href="#section-7-4" class="pilcrow">¶</a></p>
-<p id="section-7-5">This does not include RTP-Based Redundancy mechanisms as defined in <span>[<a href="#RFC7656" class="cite xref">RFC7656</a>]</span>.
+This notably includes RTP payload types representing <span>[<a href="#WebRTC_Encoded_Transform" class="cite xref">WebRTC_Encoded_Transform</a>]</span> <a href="https://w3c.github.io/webrtc-encoded-transform/#dom-rtcencodedvideoframe-data">encoded video frame formats</a> and <a href="https://w3c.github.io/webrtc-encoded-transform/#dom-rtcencodedaudioframe-data">encoded audio frame formats</a>.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<p id="section-6-5">This does not include RTP-Based Redundancy mechanisms as defined in <span>[<a href="#RFC7656" class="cite xref">RFC7656</a>]</span>.
 For instance, RTX defined in <span>[<a href="#RFC4588" class="cite xref">RFC4588</a>]</span> will retransmit SFrame-based packets.
 Forward error correction formats as defined in <span>[<a href="#RFC5109" class="cite xref">RFC5109</a>]</span> will protect the encrypted content.
-For Redundant Audio Data, known as RED, as defined in <span>[<a href="#RFC2198" class="cite xref">RFC2198</a>]</span>, a RED packetizer will take as input SFrame encrypted media data instead of unencrypted media data.<a href="#section-7-5" class="pilcrow">¶</a></p>
-<p id="section-7-6">If BUNDLE is in use and the "a=sframe" attribute is present for a media section but not for another media section of the same BUNDLE,
-payload types for media encodings that are relevant for SFrame MUST NOT be reused between the two media sections.<a href="#section-7-6" class="pilcrow">¶</a></p>
-<p id="section-7-7">Questions:<a href="#section-7-7" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-7-8">
-<li id="section-7-8.1">
-          <p id="section-7-8.1.1">Should we precise how RTX/FEC works with SFrame packetization? No impact AFAIK since RTX/FEC would work on packets (whether SFramed or not).<a href="#section-7-8.1.1" class="pilcrow">¶</a></p>
+For Redundant Audio Data, known as RED, as defined in <span>[<a href="#RFC2198" class="cite xref">RFC2198</a>]</span>, a RED packetizer will take as input SFrame encrypted media data instead of unencrypted media data.<a href="#section-6-5" class="pilcrow">¶</a></p>
+<p id="section-6-6">If BUNDLE is in use and the "a=sframe" attribute is present for a media section but not for another media section of the same BUNDLE,
+payload types for media encodings that are relevant for SFrame MUST NOT be reused between the two media sections.<a href="#section-6-6" class="pilcrow">¶</a></p>
+<p id="section-6-7">Questions:<a href="#section-6-7" class="pilcrow">¶</a></p>
+<ol start="1" type="1" class="normal type-1" id="section-6-8">
+<li id="section-6-8.1">
+          <p id="section-6-8.1.1">Should we precise how RTX/FEC works with SFrame packetization? No impact AFAIK since RTX/FEC would work on packets (whether SFramed or not).<a href="#section-6-8.1.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-7-8.2">
-          <p id="section-7-8.2.1">Is RED current proposal (transmit SFrame ciphertext blocks) good enough? An alternative is to have SFrame being applied on the entire RED packet payload.<a href="#section-7-8.2.1" class="pilcrow">¶</a></p>
+        <li id="section-6-8.2">
+          <p id="section-6-8.2.1">Is RED current proposal (transmit SFrame ciphertext blocks) good enough? An alternative is to have SFrame being applied on the entire RED packet payload.<a href="#section-6-8.2.1" class="pilcrow">¶</a></p>
 </li>
-        <li id="section-7-8.3">
-          <p id="section-7-8.3.1">Should we allow <code>a=sframe</code> at session level to mean that all media sections want sframe?<a href="#section-7-8.3.1" class="pilcrow">¶</a></p>
+        <li id="section-6-8.3">
+          <p id="section-6-8.3.1">Should we allow <code>a=sframe</code> at session level to mean that all media sections want sframe?<a href="#section-6-8.3.1" class="pilcrow">¶</a></p>
 </li>
       </ol>
-<p id="section-7-9">Here is an example of SFrame being negotiated for audio (opus and CN) and for video (H264 and VP8):<a href="#section-7-9" class="pilcrow">¶</a></p>
-<div class="alignLeft art-text artwork" id="section-7-10">
+<p id="section-6-9">Here is an example of SFrame being negotiated for audio (opus and CN) and for video (H264 and VP8):<a href="#section-6-9" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-6-10">
 <pre>
 m=audio 50000 RTP/SAVPF 10 11
 a=sframe
@@ -1415,30 +1552,95 @@ m=video 50002 RTP/SAVPF 100 101
 a=sframe
 a=rtpmap:100 H264/90000
 a=rtpmap:101 VP8/90000
-</pre><a href="#section-7-10" class="pilcrow">¶</a>
+</pre><a href="#section-6-10" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="sframe-sdp-rtp-key-management">
+<section id="section-7">
+      <h2 id="name-sframe-sdp-rtp-key-manageme">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-sframe-sdp-rtp-key-manageme" class="section-name selfRef">SFrame SDP RTP Key Management</a>
+      </h2>
+<p id="section-7-1">When SFrame is used with SDP and specifies RTP as the media transport, an additional key derivation step MAY be applied to produce a unique key per SDP m= line using the SSRC.
+The resulting per SSRC stream key is used as the initial key in the session for that m= line and becomes the input to the SFrame <code>derive_key_salt</code> function.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-2">This initial derivation step starts with the <code>base_key</code> of the session. Then, each SSRC stream involved in the SDP session, MUST perform this derivation step to produce
+the initial SFrame <code>ssrc_key</code> for that stream in the SDP session. This step is performed using HMAC-based Key Derivation Function (HKDF) <span>[<a href="#RFC5869" class="cite xref">RFC5869</a>]</span> as follows:<a href="#section-7-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-7-3">
+<pre>
+ssrc_key = HKDF-Expand(HKDF-Extract(SSRC, base_key), "SFrame 1.0 RTP Stream", CipherSuite.Nh)
+</pre><a href="#section-7-3" class="pilcrow">¶</a>
+</div>
+<p id="section-7-4">In the derivation of ssrc_key:<a href="#section-7-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7-5.1">
+          <p id="section-7-5.1.1">The SSRC is encoded as a 4-byte big-endian byte sequence and passed as the salt value to HKDF-Extract.<a href="#section-7-5.1.1" class="pilcrow">¶</a></p>
+</li>
+        <li class="normal" id="section-7-5.2">
+          <p id="section-7-5.2.1">The same CipherSuite is used for this step as for the per packet / frame step the resulting key will be used with.<a href="#section-7-5.2.1" class="pilcrow">¶</a></p>
+</li>
+      </ul>
+</section>
+</div>
+<div id="sframe-ratcheting-with-per-ssrc-keys">
+<section id="section-8">
+      <h2 id="name-sframe-ratcheting-with-per-">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-sframe-ratcheting-with-per-" class="section-name selfRef">SFrame Ratcheting with per SSRC keys</a>
+      </h2>
+<p id="section-8-1">If ratcheting is used with this per SSRC key derivation algorithm, the per SSRC key derivation step MUST be done once at the start of the session, and then each subsequent
+ratchet is done on the per SSRC specific keys using the SFrame ratcheting algorithm described in section 5.1 of <span>[<a href="#RFC9605" class="cite xref">RFC9605</a>]</span>.
+In this per SSRC key derivation algorithm, the same algorithm defined in section 5.1 of <span>[<a href="#RFC9605" class="cite xref">RFC9605</a>]</span> is used to produce the KID from the key_generation and ratchet_steps inputs. This results in all streams using the same KID, but different keys and CTR values.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-8-2">This results in a key tree that looks like the following for an offer that has three different SSRC's a, b, and c.<a href="#section-8-2" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="section-8-3">
+<pre>
++--------+
+|base_key|
++---┬----+ Initial
+    |     Derivation       Ratchet 1         Ratchet 2         Ratchet N
+    |    +----------+   +-------------+   +-------------+   +-------------+
+    |---&gt;|ssrc_key_a|--&gt;|ssrc_key_a[1]|--&gt;|ssrc_key_a[2]|--&gt;|ssrc_key_a[N]|
+    |    +----------+   +-------------+   +-------------+   +-------------+
+    |    +----------+   +-------------+   +-------------+   +-------------+
+    |---&gt;|ssrc_key_b|--&gt;|ssrc_key_b[1]|--&gt;|ssrc_key_b[2]|--&gt;|ssrc_key_b[N]|
+    |    +----------+   +-------------+   +-------------+   +-------------+
+    |    +----------+   +-------------+   +-------------+   +-------------+
+    +---&gt;|ssrc_key_c|--&gt;|ssrc_key_c[1]|--&gt;|ssrc_key_c[2]|--&gt;|ssrc_key_c[N]|
+         +----------+   +-------------+   +-------------+   +-------------+
+</pre><a href="#section-8-3" class="pilcrow">¶</a>
 </div>
 </section>
 </div>
 <div id="security-considerations">
-<section id="section-8">
+<section id="section-9">
       <h2 id="name-security-considerations">
-<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-8-1">This document is subject to the security considerations of SFrame.<a href="#section-8-1" class="pilcrow">¶</a></p>
+<p id="section-9-1">This document is subject to the security considerations of SFrame.<a href="#section-9-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-9">
+<section id="section-10">
       <h2 id="name-iana-considerations">
-<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-9-1">None<a href="#section-9-1" class="pilcrow">¶</a></p>
+<p id="section-10-1">This document updates the "attribute-name (formerly "att-field")" subregistry of the "Session Description Protocol (SDP) Parameters" registry (see Section 8.2.4 of <span>[<a href="#RFC8866" class="cite xref">RFC8866</a>]</span>).
+Specifically, it adds the SDP "a=sframe" attribute for use at the media level.<a href="#section-10-1" class="pilcrow">¶</a></p>
+<p id="section-10-2">Contact name: IETF AVT Working Group<a href="#section-10-2" class="pilcrow">¶</a></p>
+<p id="section-10-3">Contact email address: avt@ietf.org<a href="#section-10-3" class="pilcrow">¶</a></p>
+<p id="section-10-4">Attribute name: sframe<a href="#section-10-4" class="pilcrow">¶</a></p>
+<p id="section-10-5">Attribute syntax: This attribute takes no values<a href="#section-10-5" class="pilcrow">¶</a></p>
+<p id="section-10-6">Attribute semantics: N/A<a href="#section-10-6" class="pilcrow">¶</a></p>
+<p id="section-10-7">Attribute value: N/A<a href="#section-10-7" class="pilcrow">¶</a></p>
+<p id="section-10-8">Usage Level: media<a href="#section-10-8" class="pilcrow">¶</a></p>
+<p id="section-10-9">Charset dependent: No<a href="#section-10-9" class="pilcrow">¶</a></p>
+<p id="section-10-10">Purpose: The presence of this attribute in the SDP indicates that the endpoint is capable of processing SFrame packets<a href="#section-10-10" class="pilcrow">¶</a></p>
+<p id="section-10-11">O/A procedures: SDP O/A procedures are defined in section 6<a href="#section-10-11" class="pilcrow">¶</a></p>
+<p id="section-10-12">Mux Category: NORMAL<a href="#section-10-12" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="sec-normative-references">
-<section id="section-10">
+<section id="section-11">
       <h2 id="name-normative-references">
-<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
       </h2>
 <dl class="references">
 <dt id="RFC2119">[RFC2119]</dt>
@@ -1457,6 +1659,10 @@ a=rtpmap:101 VP8/90000
       <dd>
 <span class="refAuthor">Li, A., Ed.</span>, <span class="refTitle">"RTP Payload Format for Generic Forward Error Correction"</span>, <span class="seriesInfo">RFC 5109</span>, <span class="seriesInfo">DOI 10.17487/RFC5109</span>, <time datetime="2007-12" class="refDate">December 2007</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5109">https://www.rfc-editor.org/rfc/rfc5109</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC5869">[RFC5869]</dt>
+      <dd>
+<span class="refAuthor">Krawczyk, H.</span> and <span class="refAuthor">P. Eronen</span>, <span class="refTitle">"HMAC-based Extract-and-Expand Key Derivation Function (HKDF)"</span>, <span class="seriesInfo">RFC 5869</span>, <span class="seriesInfo">DOI 10.17487/RFC5869</span>, <time datetime="2010-05" class="refDate">May 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5869">https://www.rfc-editor.org/rfc/rfc5869</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC7656">[RFC7656]</dt>
       <dd>
 <span class="refAuthor">Lennox, J.</span>, <span class="refAuthor">Gross, K.</span>, <span class="refAuthor">Nandakumar, S.</span>, <span class="refAuthor">Salgueiro, G.</span>, and <span class="refAuthor">B. Burman, Ed.</span>, <span class="refTitle">"A Taxonomy of Semantics and Mechanisms for Real-Time Transport Protocol (RTP) Sources"</span>, <span class="seriesInfo">RFC 7656</span>, <span class="seriesInfo">DOI 10.17487/RFC7656</span>, <time datetime="2015-11" class="refDate">November 2015</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7656">https://www.rfc-editor.org/rfc/rfc7656</a>&gt;</span>. </dd>
@@ -1464,6 +1670,10 @@ a=rtpmap:101 VP8/90000
 <dt id="RFC8174">[RFC8174]</dt>
       <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8866">[RFC8866]</dt>
+      <dd>
+<span class="refAuthor">Begen, A.</span>, <span class="refAuthor">Kyzivat, P.</span>, <span class="refAuthor">Perkins, C.</span>, and <span class="refAuthor">M. Handley</span>, <span class="refTitle">"SDP: Session Description Protocol"</span>, <span class="seriesInfo">RFC 8866</span>, <span class="seriesInfo">DOI 10.17487/RFC8866</span>, <time datetime="2021-01" class="refDate">January 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8866">https://www.rfc-editor.org/rfc/rfc8866</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="RFC9605">[RFC9605]</dt>
       <dd>
@@ -1495,6 +1705,14 @@ a=rtpmap:101 VP8/90000
 <div class="email">
 <span>Email:</span>
 <a href="mailto:youenn@apple.com" class="email">youenn@apple.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Aron Rosenberg</span></div>
+<div dir="auto" class="left"><span class="org">Apple</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:aron.rosenberg@apple.com" class="email">aron.rosenberg@apple.com</a>
 </div>
 </address>
 </section>
