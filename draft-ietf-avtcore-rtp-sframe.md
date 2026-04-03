@@ -45,6 +45,12 @@ normative:
     date: 2025-05
     target: https://w3c.github.io/webrtc-encoded-transform/
 
+informative:
+  TestVectors:
+    title: "SFrame Per SSRC Key Derivation Test Vectors"
+    target: https://github.com/ietf-wg-avtcore/draft-ietf-avtcore-rtp-sframe/blob/main/test-vectors/test-vectors-per-ssrc-key-derivation.json
+    date: 2026-03
+
 --- abstract
 
 This document describes the RTP payload format of SFrame, its use in SDP, and per stream key derivation.
@@ -325,3 +331,24 @@ Purpose: The presence of this attribute in the SDP indicates that the endpoint i
 O/A procedures: SDP O/A procedures are defined in section 6
 
 Mux Category: NORMAL
+
+--- back
+
+# Test Vectors
+
+This section provides a set of test vectors that implementations can use to
+verify that they correctly implement SFrame per SSRC stream key derivation
+with registered SFrame cipher suites.
+
+All values are either numeric or byte strings.  Numeric values are represented
+as hex values, prefixed with `0x`.  Byte strings are represented in hex
+encoding.
+
+Line breaks and whitespace within values are inserted to conform to the width
+requirements of the RFC format.  They should be removed before use.
+
+These test vectors are also available in JSON format at {{TestVectors}}.  In the
+JSON test vectors, numeric values are JSON numbers and byte string values are
+JSON strings containing the hex encoding of the byte strings.
+
+{::include test-vectors/sframe-per-ssrc-key-derivation.md}

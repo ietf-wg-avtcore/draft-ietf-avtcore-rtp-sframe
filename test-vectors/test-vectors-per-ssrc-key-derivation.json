@@ -1,0 +1,68 @@
+{
+  "sframe_per_ssrc_key_derivation": [
+    {
+      "cipher_suite": 1,
+      "base_key": "000102030405060708090a0b0c0d0e0f",
+      "ssrc_a": 305419896,
+      "ssrc_b": 2557891634,
+      "stream_key_a": "f309f118aecdacfbc165cc080022b297100bbb55e483b002d762000a0faa684d",
+      "stream_key_b": "06e5d1b8c6e01f10b592bd2e13ff4b37182b895ec8330d5cc6ec690704043b5f"
+    },
+    {
+      "cipher_suite": 2,
+      "base_key": "000102030405060708090a0b0c0d0e0f",
+      "ssrc_a": 305419896,
+      "ssrc_b": 2557891634,
+      "stream_key_a": "f309f118aecdacfbc165cc080022b297100bbb55e483b002d762000a0faa684d",
+      "stream_key_b": "06e5d1b8c6e01f10b592bd2e13ff4b37182b895ec8330d5cc6ec690704043b5f"
+    },
+    {
+      "cipher_suite": 3,
+      "base_key": "000102030405060708090a0b0c0d0e0f",
+      "ssrc_a": 305419896,
+      "ssrc_b": 2557891634,
+      "stream_key_a": "f309f118aecdacfbc165cc080022b297100bbb55e483b002d762000a0faa684d",
+      "stream_key_b": "06e5d1b8c6e01f10b592bd2e13ff4b37182b895ec8330d5cc6ec690704043b5f"
+    },
+    {
+      "cipher_suite": 4,
+      "base_key": "000102030405060708090a0b0c0d0e0f",
+      "ssrc_a": 305419896,
+      "ssrc_b": 2557891634,
+      "stream_key_a": "f309f118aecdacfbc165cc080022b297100bbb55e483b002d762000a0faa684d",
+      "stream_key_b": "06e5d1b8c6e01f10b592bd2e13ff4b37182b895ec8330d5cc6ec690704043b5f"
+    },
+    {
+      "cipher_suite": 5,
+      "base_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "ssrc_a": 305419896,
+      "ssrc_b": 2557891634,
+      "stream_key_a": "4715e2a3e3ecb408c83135a30b8e660c75a3488dbd4d9dd3553a01b39df76bc43a5a0b130159edd90353b09c810e849db7398182ac7c1dea072a2c1b6bac7dda",
+      "stream_key_b": "f7891c6b18d88a93ba7638875b87146df4cb9693ca3837b480e9221539e86c1c98391cb1273423b33f94abe7f67c1070997a588084a54391ebda18b3d6ff92f1"
+    },
+    {
+      "cipher_suite": 6,
+      "base_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "ssrc_a": 305419896,
+      "ssrc_b": 2557891634,
+      "stream_key_a": "4715e2a3e3ecb408c83135a30b8e660c75a3488dbd4d9dd3553a01b39df76bc43a5a0b130159edd90353b09c810e849db7398182ac7c1dea072a2c1b6bac7dda",
+      "stream_key_b": "f7891c6b18d88a93ba7638875b87146df4cb9693ca3837b480e9221539e86c1c98391cb1273423b33f94abe7f67c1070997a588084a54391ebda18b3d6ff92f1"
+    },
+    {
+      "cipher_suite": 7,
+      "base_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "ssrc_a": 305419896,
+      "ssrc_b": 2557891634,
+      "stream_key_a": "4715e2a3e3ecb408c83135a30b8e660c75a3488dbd4d9dd3553a01b39df76bc43a5a0b130159edd90353b09c810e849db7398182ac7c1dea072a2c1b6bac7dda",
+      "stream_key_b": "f7891c6b18d88a93ba7638875b87146df4cb9693ca3837b480e9221539e86c1c98391cb1273423b33f94abe7f67c1070997a588084a54391ebda18b3d6ff92f1"
+    },
+    {
+      "cipher_suite": 8,
+      "base_key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "ssrc_a": 305419896,
+      "ssrc_b": 2557891634,
+      "stream_key_a": "4715e2a3e3ecb408c83135a30b8e660c75a3488dbd4d9dd3553a01b39df76bc43a5a0b130159edd90353b09c810e849db7398182ac7c1dea072a2c1b6bac7dda",
+      "stream_key_b": "f7891c6b18d88a93ba7638875b87146df4cb9693ca3837b480e9221539e86c1c98391cb1273423b33f94abe7f67c1070997a588084a54391ebda18b3d6ff92f1"
+    }
+  ]
+}
