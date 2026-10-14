@@ -49,7 +49,7 @@ informative:
   TestVectors:
     title: "SFrame Per SSRC Key Derivation Test Vectors"
     target: https://github.com/ietf-wg-avtcore/draft-ietf-avtcore-rtp-sframe/blob/main/test-vectors/test-vectors-per-ssrc-key-derivation.json
-    date: 2026-03
+    date: 2026-10
 
 --- abstract
 
@@ -337,8 +337,16 @@ Mux Category: NORMAL
 # Test Vectors
 
 This section provides a set of test vectors that implementations can use to
-verify that they correctly implement SFrame per SSRC stream key derivation
-with registered SFrame cipher suites.
+verify that they correctly implement SFrame per SSRC stream key derivation,
+and ratcheting of the resulting per SSRC keys, with registered SFrame cipher
+suites.
+
+For each SSRC, `ssrc_key_a` is the initial key produced by the derivation in
+{{sframe-sdp-rtp-key-management}}.  `ssrc_key_a_1` and `ssrc_key_a_2` are the
+keys after the first and second ratchet steps described in
+{{sframe-ratcheting-with-per-ssrc-keys}}, corresponding to `ssrc_key_a[1]`
+and `ssrc_key_a[2]` in the key tree.  The values for `ssrc_key_b` follow the
+same pattern.
 
 All values are either numeric or byte strings.  Numeric values are represented
 as hex values, prefixed with `0x`.  Byte strings are represented in hex
