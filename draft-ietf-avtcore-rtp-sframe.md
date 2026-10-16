@@ -190,7 +190,7 @@ For per-packet SFrame, the following steps are done on the sender side, with a m
    1. Set the SFrame RTP metadata other fields using the packet RTP header, including the marker bit.
    1. Send the SFrame frame generated from payload and RTP metadata to the SFrame packetizer.
 
-## RTP depacketization of SFrame
+## RTP depacketization of SFrame {#rtp-depacketization-of-sframe}
 
 When receiving an RTP SFrame packet, the following steps are done:
 
@@ -219,7 +219,7 @@ When receiving an RTP SFrame packet, the following steps are done:
 Errors like inconsistent T bits, inconsistent payload types or decryption failures cause depacketization to fail and the corresponding frame to be discarded.
 The receiver SHOULD treat a discarded frame as a lost/corrupted frame and rely on its normal recovery mechanisms (e.g., PLI/FIR for video) even though no RTP packet was lost.
 
-## SFrame metadata
+## SFrame metadata {#sframe-metadata}
 
 The SFrame AEAD encryption and decryption operations of {{!RFC9605}} take a `metadata` input, which is authenticated as part of the AAD along with the SFrame header but is not transmitted in the SFrame ciphertext.
 This metadata is unrelated to the RTP metadata used in the packetization algorithms above.
@@ -228,7 +228,7 @@ By default, the `metadata` input for the SFrame encryption and decryption operat
 RTP header fields and header extension values can be modified by RTP middleboxes such as SFUs, and some are not identical across the RTP packets of a frame.
 Applications that want to use a non-empty SFrame metadata need to define how it is made available to both sender and receiver out of band of the RTP headers.
 
-# SFrame SDP negotiation
+# SFrame SDP negotiation {#sframe-sdp-negotiation}
 
 SFrame packetization is indicated via a new "a=sframe" SDP attribute defined in this specification.
 This attribute is used at media level, it does not appear at session level.
@@ -266,10 +266,10 @@ a=rtpmap:100 H264/90000
 a=rtpmap:101 VP8/90000
 ~~~
 
-# SFrame SDP RTP Key Management
+# SFrame SDP RTP Key Management {#sframe-sdp-rtp-key-management}
 
-When SFrame is used with SDP and specifies RTP as the media transport, an additional key derivation step MAY be applied to produce a unique key per SDP m= line using the SSRC.
-The resulting per SSRC stream key is used as the initial key in the session for that m= line and becomes the input to the SFrame `derive_key_salt` function.
+When SFrame is used with SDP and specifies RTP as the media transport, an additional key derivation step MAY be applied to produce a unique key per SSRC for a m= line.
+The resulting per SSRC stream key is used as the initial key in the session for that SSRC and becomes the input to the SFrame `derive_key_salt` function.
 
 This initial derivation step starts with the `base_key` of the session. Then, each SSRC stream involved in the SDP session, MUST perform this derivation step to produce
 the initial SFrame `ssrc_key` for that stream in the SDP session. This step is performed using HMAC-based Key Derivation Function (HKDF) {{!RFC5869}} as follows:
@@ -288,7 +288,9 @@ In the derivation of ssrc_key:
 
 If ratcheting is used with this per SSRC key derivation algorithm, the per SSRC key derivation step MUST be done once at the start of the session, and then each subsequent
 ratchet is done on the per SSRC specific keys using the SFrame ratcheting algorithm described in section 5.1 of {{!RFC9605}}.
-In this per SSRC key derivation algorithm, the same algorithm defined in section 5.1 of {{!RFC9605}} is used to produce the KID from the key_generation and ratchet_steps inputs. This results in all streams using the same KID, but different keys and CTR values.
+In this per SSRC key derivation algorithm, the same algorithm defined in section 5.1 of {{!RFC9605}} is used to produce the KID from the key_generation and ratchet_steps inputs. This results in all streams using the same KID, but different keys.
+Each stream maintains its own CTR value, so the same CTR value can be used by several streams.
+Since the keys are different, this does not result in nonce reuse.
 
 This results in a key tree that looks like the following for an offer that has three different SSRC's a, b, and c.
 
@@ -310,7 +312,81 @@ This results in a key tree that looks like the following for an offer that has t
 
 # Security Considerations
 
-This document is subject to the security considerations of SFrame.
+This document is subject to the security considerations of SFrame {{!RFC9605}}.
+How keys are established and distributed between endpoints is out of scope of this document.
+
+## Scope of SFrame Protection
+
+SFrame provides end-to-end confidentiality and integrity of the media payload only.
+The RTP header, RTP header extensions, CSRCs and the SFrame payload descriptor are not protected end-to-end by SFrame.
+RTCP is not protected by SFrame.
+Hop-by-hop protection, typically SRTP {{!RFC3711}}, is still needed to protect these fields from attackers that are not trusted middleboxes.
+
+## Unauthenticated SFrame Payload Descriptor
+
+The S, E and T bits of the SFrame payload descriptor are not covered by the SFrame authentication.
+A middlebox modifying the S or E bits can prevent a frame from being reassembled, or can cause RTP packets of different frames to be reassembled together.
+In the latter case, SFrame decryption fails and the frame is discarded, which is a denial of service but does not compromise the media content.
+
+A middlebox modifying the T bit of all packets of a frame does not cause SFrame decryption to fail.
+The authentic decrypted data is then processed either as a raw media frame or as a packetized payload, depending on the T bit value chosen by the middlebox.
+Receivers cannot expect that the decrypted data is well-formed for the processing selected by the T bit and need to handle it as robustly as data received from the network.
+Applications that need to prevent this can bind the payload origin to the SFrame ciphertext by including it in the SFrame `metadata` input, as described in {{sframe-metadata}}.
+
+## Payload Type Confusion
+
+The payload type is not authenticated by SFrame and can be legitimately rewritten by middleboxes such as SFUs, which may use different payload type mappings on each leg.
+A malicious middlebox can thus cause authentic decrypted media to be processed by a depacketizer or decoder of a different media format than the one used by the sender.
+Media depacketizers and decoders are known to be a significant attack surface.
+Receivers cannot expect that the decrypted data matches the media format identified by the payload type and need to handle it as robustly as data received from the network.
+Applications that have a payload type independent way to identify the media format, known to both sender and receiver, can include this identification in the SFrame `metadata` input.
+
+## Metadata Exposed to Middleboxes
+
+By design, SFrame exposes metadata to middleboxes so that they can make forwarding decisions.
+This includes the RTP header, the RTP header extensions, the SFrame header, the SFrame payload descriptor and the RTP packet sizes.
+This information can reveal frame boundaries, frame sizes, key frames, video layer structure, and in the case of audio, voice activity, for instance via the audio level header extension {{?RFC6464}}.
+These leaks are larger with per-packet SFrame, where the SFrame boundaries follow the media-format-specific packetization.
+
+Senders are expected to only send the header extensions that are needed by the middleboxes and the receivers to reduce privacy risks.
+Encryption of header extensions, for instance using {{?RFC9335}}, protects them from attackers on the network path but not from middleboxes that terminate the hop-by-hop protection.
+RTP padding can be used to reduce the information leaked by packet sizes.
+
+## Per SSRC Key Derivation
+
+The SFrame encryption nonce is derived from the key and the CTR value.
+If several RTP streams are encrypted with the same key and KID while maintaining independent CTR values, the same nonce will be used with the same key for different content, which breaks the confidentiality and integrity guarantees of the AEAD algorithms used by SFrame.
+The per SSRC key derivation defined in {{sframe-sdp-rtp-key-management}} prevents this by producing a different key for each SSRC.
+When the per SSRC key derivation is not used, the application ensures that each RTP stream encrypted with the same base_key uses distinct KID values, or that the streams share a single CTR counter.
+
+The per SSRC key derivation relies on the uniqueness of the SSRC among the RTP streams using the same base_key.
+If two senders use the same base_key and pick the same SSRC, they will derive the same ssrc_key and may reuse nonces.
+A base_key is not expected to be shared between senders unless the application guarantees that their SSRCs are distinct.
+When an SSRC changes, for instance after an SSRC collision as described in {{!RFC3550}}, a new ssrc_key is derived from the new SSRC and the CTR value can be reset.
+
+The SSRC used for the derivation is the SSRC chosen by the sender.
+A middlebox that rewrites SSRCs, as is commonly done by SFUs when forwarding simulcast streams, prevents receivers from deriving the correct key, unless the receivers know the original SSRC through other means.
+In that case, decryption fails, which is a denial of service but does not compromise the media content.
+Similarly, a middlebox swapping the SSRCs of two RTP streams causes decryption failures instead of media of one stream being presented as media of the other stream.
+
+Retransmission packets as defined in {{!RFC4588}} carry SFrame packets that were encrypted with the key derived from the original SSRC, not from the retransmission SSRC.
+
+Sender and receiver agree in an out-of-band mechanism on whether the per SSRC key derivation is used.
+A mismatch results in decryption failures for all media.
+
+## Downgrade
+
+An attacker able to modify the SDP can remove the "a=sframe" attribute.
+The negotiation rules of {{sframe-sdp-negotiation}} prevent an endpoint that offered SFrame from sending unencrypted media in that case, but they do not prevent an attacker from removing "a=sframe" from an offer.
+In many deployments, the signaling server is operated by the same entity as the SFU, which is the entity SFrame protects against.
+Applications that require end-to-end encryption cannot rely solely on the SDP negotiation to decide whether to use SFrame.
+Instead, they have to enforce SFrame usage based on their own policy.
+
+## Resource Exhaustion
+
+The depacketization algorithm of {{rtp-depacketization-of-sframe}} buffers RTP packets until a complete SFrame frame is received.
+An attacker sending packets that never complete a frame can cause unbounded memory use.
+Receivers are expected to bound the number of buffered packets and discard incomplete frames after a limited amount of time, for instance when newer frames have been fully received.
 
 # IANA Considerations
 
