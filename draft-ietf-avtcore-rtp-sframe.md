@@ -275,7 +275,8 @@ This initial derivation step starts with the `base_key` of the session. Then, ea
 the initial SFrame `ssrc_key` for that stream in the SDP session. This step is performed using HMAC-based Key Derivation Function (HKDF) {{!RFC5869}} as follows:
 
 ~~~
-ssrc_key = HKDF-Expand(HKDF-Extract(SSRC, base_key), "SFrame 1.0 RTP Stream", CipherSuite.Nh)
+ssrc_key = HKDF-Expand(HKDF-Extract(SSRC, base_key),
+                       "SFrame 1.0 RTP Stream", CipherSuite.Nh)
 ~~~
 
 In the derivation of ssrc_key:
@@ -297,17 +298,17 @@ This results in a key tree that looks like the following for an offer that has t
 ~~~
 +--------+
 |base_key|
-+---┬----+ Initial
-    |     Derivation       Ratchet 1         Ratchet 2         Ratchet N
-    |    +----------+   +-------------+   +-------------+   +-------------+
-    |--->|ssrc_key_a|-->|ssrc_key_a[1]|-->|ssrc_key_a[2]|-->|ssrc_key_a[N]|
-    |    +----------+   +-------------+   +-------------+   +-------------+
-    |    +----------+   +-------------+   +-------------+   +-------------+
-    |--->|ssrc_key_b|-->|ssrc_key_b[1]|-->|ssrc_key_b[2]|-->|ssrc_key_b[N]|
-    |    +----------+   +-------------+   +-------------+   +-------------+
-    |    +----------+   +-------------+   +-------------+   +-------------+
-    +--->|ssrc_key_c|-->|ssrc_key_c[1]|-->|ssrc_key_c[2]|-->|ssrc_key_c[N]|
-         +----------+   +-------------+   +-------------+   +-------------+
++---+----+ Initial
+    |     Derivation       Ratchet 1               Ratchet N
+    |    +----------+   +-------------+         +-------------+
+    |--->|ssrc_key_a|-->|ssrc_key_a[1]|-->...-->|ssrc_key_a[N]|
+    |    +----------+   +-------------+         +-------------+
+    |    +----------+   +-------------+         +-------------+
+    |--->|ssrc_key_b|-->|ssrc_key_b[1]|-->...-->|ssrc_key_b[N]|
+    |    +----------+   +-------------+         +-------------+
+    |    +----------+   +-------------+         +-------------+
+    +--->|ssrc_key_c|-->|ssrc_key_c[1]|-->...-->|ssrc_key_c[N]|
+         +----------+   +-------------+         +-------------+
 ~~~
 
 # Security Considerations
@@ -431,7 +432,7 @@ For each SSRC, `ssrc_key_a` is the initial key produced by the derivation in
 {{sframe-sdp-rtp-key-management}}.  `ssrc_key_a_1` and `ssrc_key_a_2` are the
 keys after the first and second ratchet steps described in
 {{sframe-ratcheting-with-per-ssrc-keys}}, corresponding to `ssrc_key_a[1]`
-and `ssrc_key_a[2]` in the key tree.  The values for `ssrc_key_b` follow the
+and `ssrc_key_a[N]` with N = 2 in the key tree.  The values for `ssrc_key_b` follow the
 same pattern.
 
 All values are either numeric or byte strings.  Numeric values are represented
