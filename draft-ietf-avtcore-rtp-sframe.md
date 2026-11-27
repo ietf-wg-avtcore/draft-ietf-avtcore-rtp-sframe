@@ -44,6 +44,12 @@ normative:
     title: WebRTC Encoded Transform
     date: 2025-05
     target: https://w3c.github.io/webrtc-encoded-transform/
+  DD:
+    author:
+      org: Alliance for Open Media
+    title: "Dependency Descriptor RTP Header Extension, in RTP Payload Format For AV1"
+    date: false
+    target: https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension
 
 informative:
   TestVectors:
@@ -140,6 +146,14 @@ The header extensions of the SFrame RTP packets SHOULD be the same
 as those of the output of the media-format-specific packetization, but some may be omitted
 if it is known that the omitted header extensions do not need to be duplicated on each SFrame RTP packet.
 
+The SFrame ciphertext protects the media-format-specific payload header along with the media payload,
+and there is no such payload header at all when the payload origin is raw.
+Information such as whether a video frame is a key frame, the frame dependencies,
+and the spatial and temporal layers is therefore only available to receivers and middleboxes
+from the RTP header extensions.
+For video, every SFrame RTP packet MUST carry the Dependency Descriptor {{DD}} RTP header extension,
+which is negotiated as described in {{sframe-sdp-negotiation}}.
+
 # RTP Processing of SFrame frames
 
 ## RTP Packetization of SFrame
@@ -157,6 +171,8 @@ For a given SFrame frame to be sent, the following steps are done:
    1. Prepend the payload with the descriptor.
    1. Let packet be an RTP packet with payload.
    1. Set the packet's RTP header, including header extensions, using the RTP metadata.
+   1. If the SFrame frame payload origin is raw and the RTP metadata contains a Dependency Descriptor header extension,
+      set its start_of_frame flag only on the first packet and its end_of_frame flag only on the last packet.
    1. In particular, if the SFrame frame marker bit is set, set the RTP header marker bit to the value of the second bit E of the descriptor.
    1. Send the packet.
 
@@ -174,6 +190,8 @@ For per-frame SFrame, the following steps are done on the sender side, with a me
 1. Set the SFrame RTP metadata payload origin to raw.
 1. Set the SFrame RTP metadata marker bit if the packet has its marker bit set.
 1. Set the SFrame RTP metadata other fields (timestamp, payload type, RTP header extensions...) using the packet RTP header.
+1. If the first RTP packet in the list carries a Dependency Descriptor header extension,
+   set the Dependency Descriptor of the SFrame RTP metadata to the one of the first RTP packet in the list.
 1. Send the SFrame frame generated from payload and RTP metadata to the SFrame packetizer.
 
 ### Per-packet SFrame sending
@@ -211,6 +229,8 @@ When receiving an RTP SFrame packet, the following steps are done:
    1. The RTP metadata's payload origin is packetized if the T bit value is 1 and raw otherwise.
 1. Decrypt the SFrame payload to obtain the media decrypted data. If decryption fails, abort these steps.
 1. If the frame RTP metadata payload origin is raw, i.e., the T bits of each RTP packet of the list are 0, send the media frame created from the media decrypted data and SFrame RTP metadata to the receiving pipeline.
+   For video, the media frame type, its dependencies and its layers are given by the Dependency Descriptor
+   header extension carried by the RTP packets of the list.
 1. Otherwise, run the following sub-steps:
    1. Let depacketizer be a media-format-specific depacketizer selected from the frame payload type.
    1. Send the media decrypted data and SFrame RTP metadata to the depacketizer.
@@ -218,6 +238,8 @@ When receiving an RTP SFrame packet, the following steps are done:
 
 Errors like inconsistent T bits, inconsistent payload types or decryption failures cause depacketization to fail and the corresponding frame to be discarded.
 The receiver SHOULD treat a discarded frame as a lost/corrupted frame and rely on its normal recovery mechanisms (e.g., PLI/FIR for video) even though no RTP packet was lost.
+A receiver MAY discard a video SFrame frame whose RTP packets do not carry the Dependency Descriptor
+RTP header extension.
 
 ## SFrame metadata {#sframe-metadata}
 
@@ -239,6 +261,13 @@ An answerer that requires SFrame MUST reject m-sections that do not have the "a=
 If the offer contains "a=sframe" and the answer does not, the offerer MUST NOT send media for that m-section and MUST NOT fall back to sending unencrypted RTP.
 The offerer MUST also discard any RTP received for that m-section and SHOULD close it in subsequent offers.
 If an m-section has the "a=sframe" SDP attribute in an offer, it MUST appear in any reoffer unless the m-section is closed.
+
+When the "a=sframe" attribute is present in a video media section, the Dependency Descriptor
+RTP header extension MUST also be negotiated for that media section.
+An answerer MUST NOT include the "a=sframe" attribute in a video media section of its answer
+if the Dependency Descriptor is not negotiated.
+An answer with the "a=sframe" attribute but without the Dependency Descriptor for a video media section
+is handled as an answer without the "a=sframe" attribute.
 
 When SFrame is in use for that media section, it will apply to the relevant media encodings defined for that media section.
 This includes RTP payload types bound to media packetizers and media depacketizers as defined in {{!RFC7656}}, typically audio formats such as Opus and RTP video formats such as H264.
@@ -264,6 +293,7 @@ m=video 50002 RTP/SAVPF 100 101
 a=sframe
 a=rtpmap:100 H264/90000
 a=rtpmap:101 VP8/90000
+a=extmap:1 https://aomediacodec.github.io/av1-rtp-spec/#dependency-descriptor-rtp-header-extension
 ~~~
 
 # SFrame SDP RTP Key Management {#sframe-sdp-rtp-key-management}
